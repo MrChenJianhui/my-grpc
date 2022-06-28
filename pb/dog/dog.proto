@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package dog;
+
+option go_package="github/my-grpc/pb/dog;dog";
+
+message DogReq{
+  string name = 1;
+  int32 age = 2;
+}
+
+message DogResp{
+  string name = 1;
+  int32 age = 2;
+}
+
+service SearchService{
+  rpc Search(DogReq) returns (DogResp);
+  rpc SearchIn(stream DogReq) returns (DogResp);
+  rpc SearchOut(DogReq) returns (stream DogResp);
+  rpc SearchIO(stream DogReq) returns (stream DogResp);
+}

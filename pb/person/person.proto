@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package person;
+
+option go_package="github/my-grpc/pb/person;person";
+
+message Home{
+  repeated Person persons = 1;
+  message V{
+    string name = 1;
+  }
+  V v = 2;
+}
+
+message Person{
+  string name = 1;
+  int32 age = 2;
+  repeated string test = 4; // 切片
+  map<string,string> test_map = 5; // map
+
+  reserved "test_m"; // 保留字，无法声明使用
+
+  enum Gender{
+    option allow_alias = true;
+    MAN = 0;
+    FEMALE = 1;
+    GIRL = 1; // allow_alias一旦设置为true，则可生成.go文件，但是GIRL这个值取不到
+    OTHER = 2;
+  }
+  Gender gender = 3;
+
+  oneof TestOneOf{ // 需要通过断言去设值，通过switch case判断类型取值
+    string one = 6;
+    string two = 7;
+  }
+
+}
+
+service SearchService{
+  rpc Search(Person) returns (Person);
+  rpc SearchIn(stream Person) returns (Person);
+  rpc SearchOut(Person) returns (stream Person);
+  rpc SearchIO(stream Person) returns (stream Person);
+}
+
