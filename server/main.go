@@ -48,15 +48,19 @@ func (*dogServe) SearchOut(req *dog.DogReq, server dog.SearchService_SearchOutSe
 }
 
 func (*dogServe) SearchIO(server dog.SearchService_SearchIOServer) error {
+	i := 0
 	ch := make(chan string, 0)
-	for {
-		req, err := server.Recv()
-		if err != nil {
-			ch <- "over"
-			break
+	go func() {
+		for {
+			i++
+			req, _ := server.Recv()
+			if i >= 10 {
+				ch <- "over"
+				break
+			}
+			ch <- req.Name
 		}
-		ch <- req.Name
-	}
+	}()
 	for {
 		s := <-ch
 		if s == "over" {

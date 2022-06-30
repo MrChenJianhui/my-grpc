@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github/my-grpc/pb/dog"
@@ -63,23 +64,57 @@ func main() {
 			}
 	*/
 
-	client := dog.NewSearchServiceClient(l)
-	c, err := client.SearchIO(context.Background())
-	if err != nil {
-		fmt.Println(err)
-	}
-	var i int32 = 0
-	for {
-		if i > 10 {
-			break
-		}
-		c.Send(&dog.DogReq{Name: "wangwang", Age: i})
-		time.Sleep(time.Second)
-		answer, err := c.Recv()
+	/*
+		客户端流式
+		client := dog.NewSearchServiceClient(l)
+		c, err := client.SearchIO(context.Background())
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(answer)
-		i++
+		var i int32 = 0
+		for {
+			if i > 10 {
+				break
+			}
+			c.Send(&dog.DogReq{Name: "wangwang", Age: i})
+			time.Sleep(time.Second)
+			answer, err := c.Recv()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(answer)
+			i++
+		}
+	*/
+
+	client := dog.NewSearchServiceClient(l)
+	c, err := client.SearchIO(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	if err != nil {
+		fmt.Println(err)
 	}
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			err = c.Send(&dog.DogReq{Name: "wangwang"})
+			if err != nil {
+				fmt.Println(err)
+				wg.Done()
+				break
+			}
+		}
+	}()
+	go func() {
+		for {
+			req, err := c.Recv()
+			if err != nil {
+				wg.Done()
+				fmt.Println(err)
+			} else {
+				fmt.Println(req)
+			}
+		}
+	}()
+	wg.Wait()
 }
